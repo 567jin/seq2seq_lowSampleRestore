@@ -45,7 +45,7 @@ class Decoder(nn.Module):
 
 
 class AutoEncoder(nn.Module):
-    """线性自编码器的模型，编码器和解码器都是线性层"""
+    """线性自编码器的模型，编码器和解码器都是线性层 """
 
     def __init__(self, p=0):
         super(AutoEncoder, self).__init__()
