@@ -11,7 +11,9 @@ class My_Dataset(Dataset):
 
         self.X = []
         for idx, i in enumerate(range(0, len(x), 10)):
-            self.X.append(x[i:i + 10].to(dtype=torch.float32))
+            tensor = x[i:i + 10]
+            new_tensor = self.gen_new_tensor(tensor)  # 随机选择5个元素当作输入
+            self.X.append(new_tensor.to(dtype=torch.float32))
 
         with open(label_filename, 'rb') as f:
             y_data = torch.from_numpy(np.fromfile(f, dtype=np.float64))
@@ -19,7 +21,17 @@ class My_Dataset(Dataset):
 
         self.Y = []
         for idx, i in enumerate(range(0, len(y), 10)):
-            self.Y.append(y[i:i + 10].to(dtype=torch.float32))
+            tensor = y[i:i + 10]
+            # new_tensor = self.gen_new_tensor(tensor)  # 标签还是10个 这样就可以达到5个输入对应10个标签的效果
+            self.Y.append(tensor.to(dtype=torch.float32))
+
+    def gen_new_tensor(self, tensor):
+        # 随机选择五个索引
+        indices = torch.randperm(tensor.size()[0])[:5]
+        # 从原始张量中提取选定的五个元素
+        new_tensor = tensor[indices]
+
+        return new_tensor
 
     def __getitem__(self, index: int):
         return self.X[index], self.Y[index]

@@ -15,9 +15,16 @@ def gen_new_tensor(tensor):
 
 
 if __name__ == '__main__':
-    tensor = torch.rand(2, 10)
-    for i in range(5):
-        new_tensor = gen_new_tensor(tensor)
-        print(tensor, tensor.shape)
-        print(new_tensor, new_tensor.shape)
-        print("---------------------------------")
+    # tensor = torch.rand(2, 10)
+    # for i in range(5):
+    #     new_tensor = gen_new_tensor(tensor)
+    #     print(tensor, tensor.shape)
+    #     print(new_tensor, new_tensor.shape)
+    #     print("---------------------------------")
+    tensor = torch.rand(10)
+    # print(tensor.size()[0])
+    indices = torch.randperm(tensor.size()[0])[:5]
+    print(indices)
+    selected_elements = tensor[indices]
+    print(tensor, tensor.shape)
+    print(selected_elements, selected_elements.shape)
