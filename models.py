@@ -58,6 +58,54 @@ class AutoEncoder(nn.Module):
         return decoded_x
 
 
+class Encoder2(nn.Module):
+    def __init__(self, p=0):
+        super(Encoder2, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Linear(5, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 300),
+            nn.ReLU(True),
+            nn.Linear(300, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 5)
+        )
+
+    def forward(self, x):
+        return self.encoder(x)
+
+
+class Decoder2(nn.Module):
+    def __init__(self, p=0):
+        super(Decoder2, self).__init__()
+        self.decoder = nn.Sequential(
+            nn.Linear(5, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 300),
+            nn.ReLU(True),
+            nn.Linear(300, 100),
+            nn.ReLU(True),
+            nn.Linear(100, 10)
+        )
+
+    def forward(self, x):
+        return self.decoder(x)
+
+
+class ExtraPointsAutoEncoder(nn.Module):
+    """超分线性自编码器的模型，编码器和解码器都是线性层 输入5个点 输出十个点"""
+
+    def __init__(self, p=0):
+        super(ExtraPointsAutoEncoder, self).__init__()
+        self.encoder = Encoder2(p=p)
+        self.decoder = Decoder2(p=p)
+
+    def forward(self, x):
+        encoded_x = self.encoder(x)
+        decoded_x = self.decoder(encoded_x)
+        return decoded_x
+
+
 class Autoencoder_LSTM(nn.Module):
     def __init__(self):
         super(Autoencoder_LSTM, self).__init__()
@@ -128,12 +176,21 @@ if __name__ == '__main__':
     # dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
     # train_loader, val_loader = creat_loader(dataset=dataset, batch_size=64)
     # x = torch.rand((64, 10), dtype=torch.float32).unsqueeze(2)
-    x = torch.rand((64, 10, 64), dtype=torch.float32)
+    # x = torch.rand((64, 10, 64), dtype=torch.float32)
     # x, y = next(iter(train_loader))
     # model = Autoencoder_LSTM().cuda()
-    model = TTED(input_dim=64, output_dim=10).cuda()
-    print(model)
-    out = model(x.cuda())
-    # print(y, y.shape)
-    print(out[:1, :], out.shape)
-    print(x[:1, :])
+    # model = TTED(input_dim=64, output_dim=10).cuda()
+    # print(model)
+    # out = model(x.cuda())
+    # # print(y, y.shape)
+    # print(out[:1, :], out.shape)
+    # print(x[:1, :])
+
+    model = ExtraPointsAutoEncoder()
+    dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
+    train_loader, val_loader = creat_loader(dataset=dataset, batch_size=1)
+
+    x, y = next(iter(train_loader))
+    out = model(x)
+    print(y, y.shape)
+    print(out, out.shape)
