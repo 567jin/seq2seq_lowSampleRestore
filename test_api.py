@@ -21,10 +21,13 @@ if __name__ == '__main__':
     #     print(tensor, tensor.shape)
     #     print(new_tensor, new_tensor.shape)
     #     print("---------------------------------")
-    tensor = torch.rand(10)
+    # tensor = torch.rand(10)
     # print(tensor.size()[0])
-    indices = torch.randperm(tensor.size()[0])[:5]
-    print(indices)
-    selected_elements = tensor[indices]
-    print(tensor, tensor.shape)
-    print(selected_elements, selected_elements.shape)
+    # indices = torch.randperm(tensor.size()[0])[:5]
+    # print(indices)
+    # selected_elements = tensor[indices]
+    # print(tensor, tensor.shape)
+    # print(selected_elements, selected_elements.shape)
+    x = torch.rand((64, 5))
+    print(x.shape)
+    print(x.unsqueeze(1).shape)

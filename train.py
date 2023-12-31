@@ -12,7 +12,7 @@ from tqdm.auto import tqdm
 import mmap
 import struct
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from models import AutoEncoder, Autoencoder_LSTM
+from models import AutoEncoder, Autoencoder_LSTM, ExtraPointsAutoEncoder, ExtraPointsAutoEncoderDeconv
 from create_data import My_Dataset, creat_loader
 
 
@@ -26,16 +26,16 @@ class Args:
         self.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self.last_model_name = "out/P_lastModel.pth"  # 最后的模型保存路径
-        self.best_model_name = "out/P_bestModel.pth"  # 最好的模型保存路径
+        self.last_model_name = "out/X_ExtraPointsDeconvLastModel.pth"  # 最后的模型保存路径
+        self.best_model_name = "out/X_ExtraPointsDeconvBestModel.pth"  # 最好的模型保存路径
 
-        self.early_stop_epochs = 5  # 验证五次正确率无提升即停止训练
+        self.early_stop_epochs = 50  # 验证五次正确率无提升即停止训练
         self.prior = 100  # 先验的loss 只有
         # 随机选择0-300之间的数 按照print_idx==idx打印一下中间结果 这里300表示训练集或验证集最大的批次数
         self.print_idx = np.random.randint(0, 300, 1).item()
         ########################################################################################
         # 修改模型时 一定要修改plot！！！！！！！！#
-        self.figPlot_path = r"log\autoencoder_P.svg"
+        self.figPlot_path = r"log\extra_points_autoencoderDeconv_X.svg"
         ########################################################################################
 
 
@@ -123,7 +123,7 @@ class Trainer():
 
             self.train_epochs_loss.append(train_loss)
             # Update learning rate
-            print("训练: epoch={},loss={:.8f}".format(epoch + 1, train_loss))
+            print("训练: epoch={}, loss={:.8f}".format(epoch + 1, train_loss))
 
             # =========================val=========================
             if (epoch + 1) % 2 == 0:  # 每训练两轮验证一次
@@ -160,7 +160,7 @@ class Trainer():
                     # 保存验证集上acc最好的模型
                     torch.save(self.model.state_dict(),
                                self.args.best_model_name)
-                    print("保存模型... 在epoch={},loss={:.8f}".format(epoch + 1, val_loss))
+                    print("保存模型... 在epoch={}, loss={:.8f}".format(epoch + 1, val_loss))
                     self.plot()
                 else:
                     flag += 1
@@ -198,11 +198,13 @@ class Trainer():
 
 if __name__ == '__main__':
     args = Args()
-    dataset = My_Dataset("data/P.bin", "data/nihep.bin")
+    dataset = My_Dataset("data/x.bin", "data/nihex.bin")
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=args.batch_size)
 
-    model = AutoEncoder().cuda()
+    # model = AutoEncoder().cuda()
     # model = Autoencoder_LSTM().cuda()
+    # model = ExtraPointsAutoEncoder().cuda()
+    model = ExtraPointsAutoEncoderDeconv().cuda()
     trainer = Trainer(args, train_loader, val_loader, model)
     trainer.train()
     trainer.plot()
