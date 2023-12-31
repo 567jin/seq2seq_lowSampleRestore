@@ -92,13 +92,54 @@ class Decoder2(nn.Module):
         return self.decoder(x)
 
 
+class EncoderCNN(nn.Module):
+    def __init__(self):
+        super(EncoderCNN, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv1d(1, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(512, 10, kernel_size=3, stride=1, padding=1)
+        )
+
+    def forward(self, x):
+        x = x.unsqueeze(1)
+        return self.encoder(x)
+
+
+class DecoderCNN(nn.Module):
+    def __init__(self):
+        super(DecoderCNN, self).__init__()
+        self.decoder = nn.Sequential(
+            nn.Conv1d(10, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(512, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 1, kernel_size=3, stride=1, padding=1)
+        )
+
+    def forward(self, x):
+        return self.decoder(x).squeeze()
+
+
 class ExtraPointsAutoEncoder(nn.Module):
     """超分线性自编码器的模型，编码器和解码器都是线性层 输入5个点 输出十个点"""
 
     def __init__(self, p=0):
         super(ExtraPointsAutoEncoder, self).__init__()
-        self.encoder = Encoder2(p=p)
-        self.decoder = Decoder2(p=p)
+        # self.encoder = Encoder2(p=p)
+        # self.decoder = Decoder2(p=p)
+        self.encoder = EncoderCNN()
+        self.decoder = DecoderCNN()
 
     def forward(self, x):
         encoded_x = self.encoder(x)
@@ -172,6 +213,56 @@ class TTED(nn.Module):
         return output
 
 
+class EncoderDeconv(nn.Module):
+    def __init__(self):
+        super(EncoderDeconv, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv1d(1, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(256, 512, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(512, 10, kernel_size=3, stride=1, padding=1)
+        )
+
+    def forward(self, x):
+        x = x.unsqueeze(1)  # 扩展维度 (batch_size, channels, sequence_length)
+        return self.encoder(x)
+
+
+class DecoderDeconv(nn.Module):
+    def __init__(self):
+        super(DecoderDeconv, self).__init__()
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose1d(10, 64, kernel_size=4, stride=2, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 1, kernel_size=1, stride=1)
+        )
+
+    def forward(self, x):
+        x = self.decoder(x)
+        # print("decoder的输出: ", x.shape)
+        return x.squeeze(1)  # 截取前 10 个点
+
+
+class ExtraPointsAutoEncoderDeconv(nn.Module):
+    """超分线性自编码器的模型，编码器和解码器都是线性层 输入5个点 输出十个点"""
+
+    def __init__(self, p=0):
+        super(ExtraPointsAutoEncoderDeconv, self).__init__()
+        self.encoder = EncoderDeconv()
+        self.decoder = DecoderDeconv()
+
+    def forward(self, x):
+        encoded_x = self.encoder(x)
+        # print("Encoder的输出: ", encoded_x.shape)
+        decoded_x = self.decoder(encoded_x)
+        return decoded_x
+
+
 if __name__ == '__main__':
     # dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
     # train_loader, val_loader = creat_loader(dataset=dataset, batch_size=64)
@@ -186,7 +277,8 @@ if __name__ == '__main__':
     # print(out[:1, :], out.shape)
     # print(x[:1, :])
 
-    model = ExtraPointsAutoEncoder()
+    # model = ExtraPointsAutoEncoder()
+    model = ExtraPointsAutoEncoderDeconv()
     dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=1)
 
