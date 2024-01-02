@@ -136,10 +136,10 @@ class ExtraPointsAutoEncoder(nn.Module):
 
     def __init__(self, p=0):
         super(ExtraPointsAutoEncoder, self).__init__()
-        # self.encoder = Encoder2(p=p)
-        # self.decoder = Decoder2(p=p)
-        self.encoder = EncoderCNN()
-        self.decoder = DecoderCNN()
+        self.encoder = Encoder2(p=p)
+        self.decoder = Decoder2(p=p)
+        # self.encoder = EncoderCNN()
+        # self.decoder = DecoderCNN()
 
     def forward(self, x):
         encoded_x = self.encoder(x)
@@ -245,7 +245,41 @@ class DecoderDeconv(nn.Module):
     def forward(self, x):
         x = self.decoder(x)
         # print("decoder的输出: ", x.shape)
-        return x.squeeze(1)  # 截取前 10 个点
+        return x.squeeze(1)
+
+
+class EncoderDeconv2(nn.Module):
+    def __init__(self):
+        super(EncoderDeconv2, self).__init__()
+        self.encoder = nn.Sequential(
+            nn.Conv1d(1, 64, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(64, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.Conv1d(128, 64, kernel_size=3, stride=1, padding=1),
+        )
+
+    def forward(self, x):
+        x = x.unsqueeze(1)  # 扩展维度 (batch_size, channels, sequence_length)
+        return self.encoder(x)
+
+
+class DecoderDeconv2(nn.Module):
+    def __init__(self):
+        super(DecoderDeconv2, self).__init__()
+        # 输入为 64*(channels)*5  输出需要是64*10
+        self.decoder = nn.Sequential(
+            nn.ConvTranspose1d(64, 128, kernel_size=4, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(128, 64, kernel_size=5, stride=1, padding=1),
+            nn.ReLU(True),
+            nn.ConvTranspose1d(64, 1, kernel_size=5, stride=1, padding=1),
+        )
+
+    def forward(self, x):
+        x = self.decoder(x)
+        # print("decoder的输出: ", x.shape)
+        return x.squeeze(1)
 
 
 class ExtraPointsAutoEncoderDeconv(nn.Module):
@@ -253,8 +287,10 @@ class ExtraPointsAutoEncoderDeconv(nn.Module):
 
     def __init__(self, p=0):
         super(ExtraPointsAutoEncoderDeconv, self).__init__()
-        self.encoder = EncoderDeconv()
-        self.decoder = DecoderDeconv()
+        # self.encoder = EncoderDeconv()
+        # self.decoder = DecoderDeconv()
+        self.encoder = EncoderDeconv2()
+        self.decoder = DecoderDeconv2()
 
     def forward(self, x):
         encoded_x = self.encoder(x)
@@ -279,7 +315,7 @@ if __name__ == '__main__':
 
     # model = ExtraPointsAutoEncoder()
     model = ExtraPointsAutoEncoderDeconv()
-    dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
+    dataset = My_Dataset(sig_filename=r"data\x.bin", label_filename=r"data\nihex.bin", extra_points=True)
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=1)
 
     x, y = next(iter(train_loader))
