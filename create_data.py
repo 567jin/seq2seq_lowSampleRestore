@@ -4,16 +4,21 @@ import numpy as np
 
 
 class My_Dataset(Dataset):
-    def __init__(self, sig_filename, label_filename) -> None:
+    def __init__(self, sig_filename, label_filename, extra_points=False) -> None:
         with open(sig_filename, 'rb') as f:
             x_data = torch.from_numpy(np.fromfile(f, dtype=np.float64))
             x = x_data
 
         self.X = []
-        for idx, i in enumerate(range(0, len(x), 10)):
-            tensor = x[i:i + 10]
-            new_tensor = self.gen_new_tensor(tensor)  # 随机选择5个元素当作输入
-            self.X.append(new_tensor.to(dtype=torch.float32))
+        if extra_points:  # 开启超分 即处理输入 随机选择5个元素
+            for idx, i in enumerate(range(0, len(x), 10)):
+                tensor = x[i:i + 10]
+                new_tensor = self.gen_new_tensor(tensor)  # 随机选择5个元素当作输入
+                self.X.append(new_tensor.to(dtype=torch.float32))
+        else:
+            for idx, i in enumerate(range(0, len(x), 10)):
+                tensor = x[i:i + 10]
+                self.X.append(tensor.to(dtype=torch.float32))
 
         with open(label_filename, 'rb') as f:
             y_data = torch.from_numpy(np.fromfile(f, dtype=np.float64))
