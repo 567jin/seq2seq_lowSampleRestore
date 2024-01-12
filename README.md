@@ -1,4 +1,3 @@
-时间序列相关
 ![](assets/time-series.gif)
 
 # Cv-QKD中的时钟恢复
@@ -15,6 +14,6 @@
 两大类：直接在原自编码器模型上将输入改成5，输出是10,强行让其有生成能力。但效果不好
 正在尝试生成模型VAE或GAN
 
-VAE的结构如下图：来源于李宏毅上课PPT ![vae](assets/vae.png)
+VAE的结构如下图：来源于李宏毅老师上课PPT ![vae](assets/vae.png)
 
 
