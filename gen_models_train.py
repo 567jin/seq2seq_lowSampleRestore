@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import random
 from tqdm.auto import tqdm
 
-from gen_modesl import VAE, loss_vae
+from gen_models import VAE, loss_vae
 from create_data import My_Dataset, creat_loader
 from utils.fix_seed import same_seeds
 
