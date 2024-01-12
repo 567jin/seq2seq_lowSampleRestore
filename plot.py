@@ -1,13 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib
 
 
-def plot_linear(predict, label):
+def plot_linear(predict, label, title="amplitude"):
     plt.figure(figsize=(12, 4))
     x = np.arange(10)
     plt.plot(x, predict, label="predict", linewidth=2, color="red")
     plt.plot(x, label, label="label", linewidth=2, color="blue")
-    plt.title('amplitude')
+    plt.ylim(-3, 3)  # 设置 y 轴范围
+    plt.xticks([0, 2, 4, 6, 8, 10])
+    plt.title(title)
     plt.legend()
     plt.show()
 

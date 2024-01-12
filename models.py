@@ -269,9 +269,9 @@ class DecoderDeconv2(nn.Module):
         super(DecoderDeconv2, self).__init__()
         # 输入为 64*(channels)*5  输出需要是64*10
         self.decoder = nn.Sequential(
-            nn.ConvTranspose1d(64, 128, kernel_size=4, stride=1, padding=1),
+            nn.ConvTranspose1d(64, 128, kernel_size=4, stride=1, padding=1),  # 增加一个点
             nn.ReLU(True),
-            nn.ConvTranspose1d(128, 64, kernel_size=5, stride=1, padding=1),
+            nn.ConvTranspose1d(128, 64, kernel_size=5, stride=1, padding=1),  # 增加两个点
             nn.ReLU(True),
             nn.ConvTranspose1d(64, 1, kernel_size=5, stride=1, padding=1),
         )
@@ -279,6 +279,7 @@ class DecoderDeconv2(nn.Module):
     def forward(self, x):
         x = self.decoder(x)
         # print("decoder的输出: ", x.shape)
+        # 64*1*10
         return x.squeeze(1)
 
 
@@ -315,7 +316,7 @@ if __name__ == '__main__':
 
     # model = ExtraPointsAutoEncoder()
     model = ExtraPointsAutoEncoderDeconv()
-    dataset = My_Dataset(sig_filename=r"data\x.bin", label_filename=r"data\nihex.bin", extra_points=True)
+    dataset = My_Dataset(sig_filename=r"data\x.bin", label_filename=r"data\x.bin", extra_points=True)
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=1)
 
     x, y = next(iter(train_loader))

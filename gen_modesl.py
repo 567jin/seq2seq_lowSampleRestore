@@ -50,11 +50,14 @@ class VAE(nn.Module):
         return z
 
     def forward(self, x):
+        # 使用encoder将输入x编码为隐变量空间中的均值z_mean和方差z_logvar
         z_mean, z_logvar = self.encoder(x)
-        # encoder 两个输入合在一起当做decoder的输入z
+        # 使用reparameterize方法，在隐变量空间中采样得到隐变量z
+        # z = z_mean + exp(z_logvar) * epsilon，其中epsilon为标准正态分布的随机噪声
         z = self.reparameterize(z_mean, z_logvar)
-        # decoder的输出就是预测的重建值x
+        # 使用decoder将隐变量z解码为预测的重建值x
         x_hat = self.decoder(z)
+        # 返回预测的重建值x，以及编码过程中的z_mean和z_logvar
         return x_hat, z_mean, z_logvar
 
 
@@ -67,11 +70,11 @@ def loss_vae(recon_x, x, z_mean, z_logvar, criterion):
     z_logvar: 潜在空间方差的对数
     criterion: 用于重建损失的损失函数
     """
-    # 重建损失
+    # 计算重建损失
     reconstruction_loss = criterion(recon_x, x)
-    # KL 散度损失
+    # 计算 KL 散度损失
     kl_loss = -0.5 * torch.sum(1 + z_logvar - z_mean.pow(2) - z_logvar.exp())
-    # 总损失
+    # 计算总损失
     total_loss = reconstruction_loss + kl_loss
     return total_loss
 

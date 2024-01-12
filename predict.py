@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from models import AutoEncoder
+from models import AutoEncoder, ExtraPointsAutoEncoder, ExtraPointsAutoEncoderDeconv
 from create_data import creat_loader, My_Dataset
 from plot import plot_linear
 
@@ -29,9 +29,11 @@ def save_val(output_file, model, X, length):
 
 
 if __name__ == '__main__':
-    model = AutoEncoder()
-    model.load_state_dict(torch.load("out/P_bestModel.pth"))
-    dataset = My_Dataset("data/p_xunlian2.bin", "data/nihep.bin")
+    # model = AutoEncoder()
+    model = ExtraPointsAutoEncoderDeconv()
+    # model = ExtraPointsAutoEncoder()
+    model.load_state_dict(torch.load("out/X_ExtraPointsDeconv2BestModel.pth"))
+    dataset = My_Dataset("data/x.bin", label_filename="data/nihex.bin", extra_points=True)
     X = dataset.X
     Y = dataset.Y
     x = X[0]
@@ -39,11 +41,13 @@ if __name__ == '__main__':
     print(model)
     data_length = len(X)
     print("数据长度: ", data_length)
-    out = predict(model, x)
+    print(x.shape)
+    out = predict(model, x.unsqueeze(0))  # 卷积的输入需要是 1,5
+    # out = predict(model, x)
     print("模型输出: ", out)
     print("标签: ", y)
     print(x)
     print("模型输出: ", out)
     print(out.shape)
-    # plot_linear(out.cpu().numpy(), x.cpu().numpy())
-    save_val(output_file="output_p2.bin", model=model, X=X, length=data_length)
+    plot_linear(out.squeeze().cpu().numpy(), y.squeeze().cpu().numpy(), title="DeconCNN2-based Model")
+    # save_val(output_file="output_p2.bin", model=model, X=X, length=data_length)

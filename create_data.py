@@ -31,9 +31,11 @@ class My_Dataset(Dataset):
             self.Y.append(tensor.to(dtype=torch.float32))
 
     def gen_new_tensor(self, tensor):
-        # 随机选择五个索引
+        # 随机选择五个索引  这里是否对训练产生影响？ 训练不仅要学习怎样超分 还要学习选择了哪些位置的元素(即学习随机的行为)？
+        # 但感觉没影响 因为实际中 采的5个值 不一定在这10个点中哪些位置呢
+        # TODO: 这里要找马博 确认一下上面的猜想 也就是5个点跟10个点的差距在哪里 5个点是否包含在这10个点之内
         indices = torch.randperm(tensor.size()[0])[:5]
-        # 从原始张量中提取选定的五个元素
+        # 从原始张量中根据索引提取选定的五个元素
         new_tensor = tensor[indices]
 
         return new_tensor
@@ -54,9 +56,9 @@ def creat_loader(dataset, batch_size=1):
         dataset, [train_size, val_size])
 
     train_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True,
-                              num_workers=0, pin_memory=True, prefetch_factor=2, drop_last=False)
+                              num_workers=0, pin_memory=True, drop_last=False)
     val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False,
-                            num_workers=0, pin_memory=True, prefetch_factor=2, drop_last=False)
+                            num_workers=0, pin_memory=True, drop_last=False)
     print("数据集构建成功...")
     return train_loader, val_loader
 

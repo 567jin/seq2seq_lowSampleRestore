@@ -1,63 +1,52 @@
-import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.utils.data as data
+
 import numpy as np
 import matplotlib.pyplot as plt
-from torch.utils.data import DataLoader, Dataset, random_split
-import torch.nn.functional as F
+
 import random
 from tqdm.auto import tqdm
-import mmap
-import struct
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from models import AutoEncoder, Autoencoder_LSTM, ExtraPointsAutoEncoder, ExtraPointsAutoEncoderDeconv
+
+from gen_modesl import VAE, loss_vae
 from create_data import My_Dataset, creat_loader
+from utils.fix_seed import same_seeds
 
 
 class Args:
-    """以类的方式定义参数，模型超参数和一些其他设置"""
+    """存储模型参数和配置的类。
+
+    Attributes:
+        batch_size (int): 每个训练批次的样本数量。
+        lr (float): 学习率。
+        epochs (int): 训练周期的数量。
+        device (torch.device): 模型训练使用的设备 (CPU 或 GPU)。
+        last_model_name (str): 最终模型的保存路径。
+        best_model_name (str): 最佳模型的保存路径。
+        early_stop_epochs (int): 当验证正确率连续提升次数达到此值时停止训练。
+        prior (int): 先验损失的阈值。
+        print_idx (int): 随机选择的打印中间结果的批次索引。
+        figPlot_path (str): 保存图表的文件路径。
+    """
 
     def __init__(self) -> None:
         self.batch_size = 64
-        self.lr = 0.001  # 0.001 更好
-        self.epochs = 200
-        self.device = torch.device(
+        self.lr: float = 0.001  # 学习率，0.001 为推荐值
+        self.epochs: int = 200
+        self.device: torch.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self.last_model_name = "out/X_LinearLastModel.pth"  # 最后的模型保存路径
-        self.best_model_name = "out/X_LinearBestModel.pth"  # 最好的模型保存路径
-
-        self.early_stop_epochs = 50  # 验证五次正确率无提升即停止训练
-        self.prior = 100  # 先验的loss 只有
-        # 随机选择0-300之间的数 按照print_idx==idx打印一下中间结果 这里300表示训练集或验证集最大的批次数
-        self.print_idx = np.random.randint(0, 300, 1).item()
-        ########################################################################################
-        # 修改模型时 一定要修改plot！！！！！！！！#
-        self.figPlot_path = r"log\LinearAutoencoder_X.svg"
-        ########################################################################################
+        self.last_model_name: str = "out/X_LinearLastModel.pth"  # 最后的模型保存路径
+        self.best_model_name: str = "out/X_LinearBestModel.pth"  # 最佳模型的保存路径
+        self.early_stop_epochs: int = 50  # 当验证正确率连续提升超过此值时，停止训练
+        self.prior: int = 100  # 先验损失阈值
+        # 随机选择 0-300 之间的数，按 print_idx==idx 打印中间结果，300 表示训练集或验证集最大的批次数
+        self.print_idx: int = np.random.randint(0, 300)
+        # 当修改模型时，一定要修改 plot
+        self.figPlot_path: str = r"log\LinearAutoencoder_X.svg"
 
 
-def same_seeds(seed):
-    """seed setting"""
-    # Python built-in random module
-    random.seed(seed)
-    # Numpy
-    np.random.seed(seed)
-    # Torch
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        print("cuda可用, 并设置相应的随机种子Seed= ", seed)
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-    # if True, causes cuDNN to benchmark multiple convolution algorithms and select the fastest
-    torch.backends.cudnn.benchmark = False
-    # if True, causes cuDNN to only use deterministic convolution algorithms.
-    torch.backends.cudnn.deterministic = True
-
-
-class Trainer():
+class Trainer:
     """训练，训练和验证写在一起了"""
 
     def __init__(self, args, train_loader, val_loader, model):
@@ -105,13 +94,13 @@ class Trainer():
                 x = x.to(self.args.device, non_blocking=True)
                 label = label.to(self.args.device, non_blocking=True)
 
-                out = self.model(x)
-                loss = criterion(out, label)
+                x_hat, z_mean, z_logvar = self.model(x)
+                loss = loss_vae(x_hat, label, z_mean, z_logvar, criterion)
+
                 loss.backward()
                 optimizer.step()
 
                 train_epoch_loss.append(loss.detach().item())
-
                 train_loss = np.average(train_epoch_loss)
 
                 progress_bar.set_description(
@@ -119,7 +108,7 @@ class Trainer():
                 progress_bar.set_postfix(
                     {'loss': train_loss})
                 if (epoch + 1) % 10 == 0 and (idx + 1) == self.args.print_idx:
-                    print("\n预测值: ", out[:1, :])
+                    print("\n预测值: ", x_hat[:1, :])
                     print("标签值: ", label[:1, :])
             # TODO: 在线性自编码器中，对于输入10输出10的二阶拟合任务，效果很好，loss下降太快，因此在每个epoch才记录loss 导致画图很难看 可以改成在每次迭代记录loss
             self.train_epochs_loss.append(train_loss)
@@ -139,8 +128,8 @@ class Trainer():
 
                         x = x.to(self.args.device, non_blocking=True)
                         label = label.to(self.args.device, non_blocking=True)
-                        out = self.model(x)
-                        loss = criterion(out, label)
+                        x_hat, z_mean, z_logvar = self.model(x)
+                        loss = loss_vae(x_hat, label, z_mean, z_logvar, criterion)
 
                         val_epoch_loss.append(loss.detach().item())
                         val_loss = np.average(val_epoch_loss)
@@ -150,7 +139,7 @@ class Trainer():
                         val_progress_bar.set_postfix(
                             {'loss': val_loss})
                         if (idx + 1) == self.args.print_idx:
-                            print("\n预测值: ", out[:1, :])
+                            print("\n预测值: ", x_hat[:1, :])
                             print("标签值: ", label[:1, :])
 
                 self.valid_epochs_loss.append(val_loss)
@@ -188,9 +177,9 @@ class Trainer():
         plt.xlabel('epoch')
 
         plt.subplot(222)
-        plt.plot(self.train_epochs_loss, '-o', label="train_loss")
+        # plt.plot(self.train_epochs_loss, '-o', label="train_loss")
         plt.plot(self.valid_epochs_loss, '-o', label="valid_loss")
-        plt.title("epochs loss for train and valid")
+        plt.title("epochs loss for valid")
         plt.xlabel('epoch')
         plt.legend()
 
@@ -201,13 +190,10 @@ class Trainer():
 
 if __name__ == '__main__':
     args = Args()
-    dataset = My_Dataset(sig_filename="data/x.bin", label_filename="data/nihex.bin", extra_points=False)
+    dataset = My_Dataset(sig_filename="data/x.bin", label_filename="data/nihex.bin", extra_points=True)
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=args.batch_size)
 
-    model = AutoEncoder().cuda()
-    # model = Autoencoder_LSTM().cuda()
-    # model = ExtraPointsAutoEncoder().cuda()
-    # model = ExtraPointsAutoEncoderDeconv().cuda()
+    model = VAE(input_dim=5, output_dim=10, latent_dim=2).cuda()
     trainer = Trainer(args, train_loader, val_loader, model)
     trainer.train()
     trainer.plot()
