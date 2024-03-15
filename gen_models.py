@@ -9,14 +9,16 @@ from torch.autograd import Variable
 class LinearEncoder(nn.Module):
     def __init__(self, input_dim, latent_dim):
         super(LinearEncoder, self).__init__()
-        self.fc1 = nn.Linear(input_dim, 64)
-        self.fc2 = nn.Linear(64, 32)
+        self.fc1 = nn.Linear(input_dim, 32)
+        self.fc2 = nn.Linear(32, 64)
+        self.fc3 = nn.Linear(64, 32)
         self.fc3_mean = nn.Linear(32, latent_dim)
         self.fc3_logvar = nn.Linear(32, latent_dim)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
         x = torch.relu(self.fc2(x))
+        x = torch.relu(self.fc3(x))
         z_mean = self.fc3_mean(x)
         z_logvar = self.fc3_logvar(x)
         return z_mean, z_logvar
@@ -86,6 +88,6 @@ if __name__ == '__main__':
     x, y = next(iter(train_loader))
 
     x_hat, z_mean, z_logvar = model(x)
-    print("x= ", x, x.shape)
-    print("y= ", y, y.shape)
-    print("out= ", x_hat, x_hat.shape)
+    print("x = ", x, x.shape)
+    print("y = ", y, y.shape)
+    print("out = ", x_hat, x_hat.shape)

@@ -8,7 +8,7 @@ def plot_linear(predict, label, title="amplitude"):
     x = np.arange(10)
     plt.plot(x, predict, label="predict", linewidth=2, color="red")
     plt.plot(x, label, label="label", linewidth=2, color="blue")
-    plt.ylim(-3, 3)  # 设置 y 轴范围
+    # plt.ylim(-3, 3)  # 设置 y 轴范围
     plt.xticks([0, 2, 4, 6, 8, 10])
     plt.title(title)
     plt.legend()

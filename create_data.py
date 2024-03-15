@@ -1,6 +1,7 @@
 from torch.utils.data import DataLoader, Dataset, random_split
 import torch
 import numpy as np
+import plot
 
 
 class My_Dataset(Dataset):
@@ -8,7 +9,7 @@ class My_Dataset(Dataset):
         with open(sig_filename, 'rb') as f:
             x_data = torch.from_numpy(np.fromfile(f, dtype=np.float64))
             x = x_data
-
+        print("正在读取数据...")
         self.X = []
         if extra_points:  # 开启超分 即处理输入 随机选择5个元素
             for idx, i in enumerate(range(0, len(x), 10)):
@@ -51,7 +52,7 @@ def creat_loader(dataset, batch_size=1):
     train_size = int(0.8 * len(dataset))
     val_size = len(dataset) - train_size
 
-    print("构建数据集...")
+    print("构建数据集loader...")
     train_dataset, val_dataset = random_split(
         dataset, [train_size, val_size])
 
@@ -59,12 +60,12 @@ def creat_loader(dataset, batch_size=1):
                               num_workers=0, pin_memory=True, drop_last=False)
     val_loader = DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=False,
                             num_workers=0, pin_memory=True, drop_last=False)
-    print("数据集构建成功...")
+    print("数据集loader构建成功...")
     return train_loader, val_loader
 
 
 if __name__ == '__main__':
-    dataset = My_Dataset(r"data\x.bin", r"data\nihex.bin")
+    dataset = My_Dataset("data/80km/data_x0.bin", "data/80km/x0.bin")
     print(len(dataset))
     train_loader, val_loader = creat_loader(dataset=dataset)
 
@@ -74,7 +75,8 @@ if __name__ == '__main__':
     print(type(data))
 
     assert isinstance(data, torch.Tensor)
-    print(data.shape)  # 64*10
-    print(target.shape)  # 64*10
+    print(data.shape)  # 1*10
+    print(target.shape)  # 1*10
     print(data)
     print(target)
+    plot.plot_linear(data[0], target[0], "amplitude")

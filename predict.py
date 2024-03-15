@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from models import AutoEncoder, ExtraPointsAutoEncoder, ExtraPointsAutoEncoderDeconv
+from gen_models import VAE
 from create_data import creat_loader, My_Dataset
 from plot import plot_linear
 
@@ -30,9 +31,10 @@ def save_val(output_file, model, X, length):
 
 if __name__ == '__main__':
     # model = AutoEncoder()
-    model = ExtraPointsAutoEncoderDeconv()
+    # model = ExtraPointsAutoEncoderDeconv()
     # model = ExtraPointsAutoEncoder()
-    model.load_state_dict(torch.load("out/X_ExtraPointsDeconv2BestModel.pth"))
+    model = VAE(input_dim=5, output_dim=10, latent_dim=2)
+    model.load_state_dict(torch.load("out/X_gen_VAE_BestModel.pth"))
     dataset = My_Dataset("data/x.bin", label_filename="data/nihex.bin", extra_points=True)
     X = dataset.X
     Y = dataset.Y
@@ -42,12 +44,11 @@ if __name__ == '__main__':
     data_length = len(X)
     print("数据长度: ", data_length)
     print(x.shape)
-    out = predict(model, x.unsqueeze(0))  # 卷积的输入需要是 1,5
-    # out = predict(model, x)
-    print("模型输出: ", out)
+    # out = predict(model, x.unsqueeze(0))  # 卷积的输入需要是 1,5
+    out, z_mean, z_logvar = model(x)  # 线性VAE
+    # out= predict(model, x)
     print("标签: ", y)
-    print(x)
     print("模型输出: ", out)
     print(out.shape)
-    plot_linear(out.squeeze().cpu().numpy(), y.squeeze().cpu().numpy(), title="DeconCNN2-based Model")
+    plot_linear(out.detach().cpu().numpy(), y.detach().cpu().numpy(), title="VAE-based Model")
     # save_val(output_file="output_p2.bin", model=model, X=X, length=data_length)

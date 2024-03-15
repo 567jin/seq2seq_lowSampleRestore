@@ -1,6 +1,10 @@
 import torch
 import numpy as np
 
+"""
+学习一些函数的使用
+"""
+
 
 def gen_new_tensor(tensor):
     # 随机选择五个索引

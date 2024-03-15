@@ -36,14 +36,14 @@ class Args:
         self.device: torch.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self.last_model_name: str = "out/X_LinearLastModel.pth"  # 最后的模型保存路径
-        self.best_model_name: str = "out/X_LinearBestModel.pth"  # 最佳模型的保存路径
+        self.last_model_name: str = "out/X_gen_VAE_LastModel.pth"  # 最后的模型保存路径
+        self.best_model_name: str = "out/X_gen_VAE_BestModel.pth"  # 最佳模型的保存路径
         self.early_stop_epochs: int = 50  # 当验证正确率连续提升超过此值时，停止训练
         self.prior: int = 100  # 先验损失阈值
         # 随机选择 0-300 之间的数，按 print_idx==idx 打印中间结果，300 表示训练集或验证集最大的批次数
         self.print_idx: int = np.random.randint(0, 300)
         # 当修改模型时，一定要修改 plot
-        self.figPlot_path: str = r"log\LinearAutoencoder_X.svg"
+        self.figPlot_path: str = r"log\gen_VAE_X.svg"
 
 
 class Trainer:
@@ -139,8 +139,8 @@ class Trainer:
                         val_progress_bar.set_postfix(
                             {'loss': val_loss})
                         if (idx + 1) == self.args.print_idx:
-                            print("\n预测值: ", x_hat[:1, :])
-                            print("标签值: ", label[:1, :])
+                            print("\n预测值: ", x_hat[1, :])
+                            print("标签值: ", label[1, :])
 
                 self.valid_epochs_loss.append(val_loss)
                 # 关闭进度条

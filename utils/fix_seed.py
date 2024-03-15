@@ -13,7 +13,7 @@ def same_seeds(seed):
     torch.manual_seed(seed)
     # 如果 cuda 可用，则设置相应的随机种子
     if torch.cuda.is_available():
-        print("\ncuda可用, 并设置相应的随机种子 Seed = ", seed)
+        print("\ncuda可用, 并设置相应的随机种子 Seed ==> ", seed)
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
     # 禁用 cuDNN 的自动调速模式，即不使用最快的卷积算法

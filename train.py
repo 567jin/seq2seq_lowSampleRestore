@@ -26,16 +26,16 @@ class Args:
         self.device = torch.device(
             "cuda:0" if torch.cuda.is_available() else "cpu")
 
-        self.last_model_name = "out/X_LinearLastModel.pth"  # 最后的模型保存路径
-        self.best_model_name = "out/X_LinearBestModel.pth"  # 最好的模型保存路径
+        self.last_model_name = "out/X_LinearLastModel_80km.pth"  # 最后的模型保存路径
+        self.best_model_name = "out/X_LinearBestModel_80km.pth"  # 最好的模型保存路径
 
-        self.early_stop_epochs = 50  # 验证五次正确率无提升即停止训练
+        self.early_stop_epochs = 3  # 验证五次正确率无提升即停止训练
         self.prior = 100  # 先验的loss 只有
         # 随机选择0-300之间的数 按照print_idx==idx打印一下中间结果 这里300表示训练集或验证集最大的批次数
         self.print_idx = np.random.randint(0, 300, 1).item()
         ########################################################################################
         # 修改模型时 一定要修改plot！！！！！！！！#
-        self.figPlot_path = r"log\LinearAutoencoder_X.svg"
+        self.figPlot_path = r"log\LinearAutoencoder_X_80km.svg"
         ########################################################################################
 
 
@@ -201,7 +201,7 @@ class Trainer():
 
 if __name__ == '__main__':
     args = Args()
-    dataset = My_Dataset(sig_filename="data/x.bin", label_filename="data/nihex.bin", extra_points=False)
+    dataset = My_Dataset(sig_filename="data/80km/data_x0.bin", label_filename="data/80km/x0.bin", extra_points=False)
     train_loader, val_loader = creat_loader(dataset=dataset, batch_size=args.batch_size)
 
     model = AutoEncoder().cuda()
